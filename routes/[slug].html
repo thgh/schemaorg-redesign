@@ -1,0 +1,794 @@
+<:Head>
+  <title>{{ [data && data.id, 'schema.org redesign'].filter(Boolean).join(' | ') }}</title>
+</:Head>
+
+{{#if !cloak}}
+<div class="container">
+  <form class="header" method="GET" action="/" on:submit="submit(event)">
+    <label class="input-h1 font-scale-h1">
+      <a class="input-prepend" href="/" on:click="home(event)">schema:</a><input class="input-field" type="text" bind:value="slug" on:blur="blurSlug()" value="{{slug}}" name="q" ref:query tabindex="0">
+      <span class="input-append" on:click="selectQuery()">🔍</span>
+      {{#if subslug}}
+        <span class="input-ghost">schema:<span style="margin-right: 3px;"></span>{{ subslug }}</span>
+      {{/if}}
+    </label>
+    {{#if !data && suggestions[0]}}
+      <input type="hidden" value="{{ suggestions[0].id }}" name="q">
+    {{/if}}
+  </form>
+
+  {{#if data}}
+    <div class="body {{ data.e.length ? 'body--muted' : '' }}">
+      <div class="body-comment">{{{ '<p>' + data.c + (showTree ? '' : '<span class="longurl longurl-placeholder">http://schema.org/' + data.id + '</span>') + '</p>' }}}</div>
+
+      <!-- Class tree -->
+
+      {{#if showTree}}
+        <div class="tree">
+          {{#each tree as branch}}
+            <div class="branch">
+              {{#each branch as cls, index}}
+                {{#if index}}> {{/if}}<a class="branch-cls" href="/{{ cls }}">{{ cls }}</a>
+              {{/each}}
+            </div>
+          {{/each}}
+        </div>
+      {{/if}}
+      <p class="long">
+        <span class="type">{{type}}</span>
+        <span class="longurl select-all">http://schema.org/{{ data.id }}</span>
+      </p>
+    </div>
+
+    <!-- Notice -->
+    {{#if data.e.length}}
+      <div class="notices">
+        {{#each data.e as domain}}
+          <div class="notice attract">
+            <h2>Superseded by <a href="/{{ domain.id }}">{{domain.id}}</a></h2>
+          </div>
+        {{/each}}
+      </div>
+    {{/if}}
+
+    <!-- Class -->
+
+    {{#if data.d2.length}}
+      <div class="facet">
+        <h2>Properties from <a href="/{{ data.id }}">{{ data.id }}</a></h2>
+        <table class="links">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th class="nowrap">Expected type</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each data.d2 as domain}}
+              <tr class="{{domain.e.length ? 'strike' : ''}}">
+                <th class="id"><a href="/{{ domain.id }}">{{ domain.id }}</a></th>
+                <td class="expected">
+                  {{#each domain.r as type}}
+                    <div class="newline">
+                      <a href="/{{ type.id }}">{{ type.id }}</a>
+                    </div>
+                  {{/each}}
+                </td>
+                <td class="comment">{{{ domain.c || '' }}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+
+    {{#if data.r2.length}}
+      <div class="facet">
+        <h2>Instances of {{ data.id }} may appear as values for the following properties</h2>
+        <table class="links">
+          <thead>
+            <tr>
+              <th>Property</th>
+              <th>On Types</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each data.r2 as domain}}
+              <tr class="{{domain.e.length ? 'strike' : ''}}">
+                <th class="id"><a href="/{{ domain.id }}">{{ domain.id }}</a></th>
+                <td class="has">
+                  {{#each domain.d as type}}
+                    <div class="newline">
+                      <a href="/{{ type.id }}">{{ type.id }}</a>
+                    </div>
+                  {{/each}}
+                </td>
+                <td class="comment">{{{ domain.c || '' }}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+
+    {{#if type === 'rdfs:Class'}}
+      {{#if data.s2.length}}
+        <div class="facet">
+          <h2>More specific Types</h2>
+          <table class="links">
+            <thead>
+              <tr>
+                <th>Class</th>
+                <th>Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each data.s2 as domain}}
+                <tr>
+                  <th class="id"><a href="/{{ domain.id }}">{{ domain.id }}</a></th>
+                  <td class="comment">{{{ domain.c || '' }}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+          </table>
+        </div>
+      {{/if}}
+    {{/if}}
+
+    <!-- Property -->
+
+    {{#if data.r.length}}
+      <div class="facet">
+        <h2>Expected data type</h2>
+        <table class="links">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each data.r as domain}}
+              <tr>
+                <th class="id"><a href="/{{ domain.id }}">{{ domain.id }}</a></th>
+                <td class="comment">{{{ domain.c || '' }}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+    {{#if data.d.length}}
+      <div class="facet">
+        <h2>Applicable to</h2>
+        <table class="links">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each data.d as domain}}
+              <tr>
+                <th class="id"><a href="/{{ domain.id }}">{{ domain.id }}</a></th>
+                <td class="comment">{{{ domain.c || '' }}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+      </div>
+    {{/if}}
+    {{#if data.e2.length}}
+      <div class="facet">
+        <h2 class=" muted">Previously known as</h2>
+        <table class="links">
+          {{#each data.e2 as domain}}
+            <tr class="strike">
+              <td><a href="/{{ domain.id }}">{{ domain.id }}</a></td>
+              <td>{{{ domain.c || '' }}}</td>
+            </tr>
+          {{/each}}
+        </table>
+      </div>
+    {{/if}}
+
+  {{else}}
+    <div class="font-scale-h1">
+      <div class="input-prepend" style="visibility: hidden;float:left;">schema:</div>
+      <div class="suggestions" style="display: inline-block;margin-left: 5px;">
+        {{#each suggestions as suggestion}}
+          <div><a href="/{{ suggestion }}">{{ suggestion }}</a></div>
+        {{/each}}
+        {{#if !suggestions.length}}
+          {{#each samples as sample}}
+            <div><a href="/{{ sample }}">{{ sample }}</a></div>
+          {{/each}}
+        {{/if}}
+      </div>
+    </div>
+    {{#if slug && !suggestions.length}}
+      <p>
+        {{ slug }} not found!
+      </p>
+    {{/if}}
+  {{/if}}
+</div>
+{{/if}}
+
+<script>
+  import { goto } from 'sapper/runtime.js'
+  import { ids, lookup, toCollection } from './_util.js'
+
+  export default {
+    data () {
+      return {
+        cloak: false,
+        domaind: [],
+        samples: [],
+        selectedSuggestion: '',
+        slug: '',
+        data: null
+      }
+    },
+    computed: {
+      subslug (slug, data) {
+        return data && data.id && data.id !== slug && data.id.toLowerCase().startsWith(slug.toLowerCase()) && (slug + data.id.slice(slug.length))
+      },
+      suggestions (slug) {
+        if (!slug) {
+          return []
+        }
+
+        const starts = ids.filter(id => id.startsWith(slug)).slice(0, 20)
+        if (starts.length === 20) {
+          return starts
+        }
+        const lower = (slug || '').toLowerCase()
+        const includes = ids.filter(id => id.toLowerCase().includes(lower) && !id.startsWith(slug)).slice(0, 20 - starts.length)
+
+        return starts.concat(includes)
+      },
+      tree (data) {
+        return upperClass(data.id)
+      },
+      showTree (tree) {
+        return tree.length && tree[0].length > 1
+      },
+      type (data) {
+        return !data ? 'nope' : /[a-z]/.test(data.id[0]) ? 'rdf:Property' : /[A-Z]/.test(data.id[0]) ? 'rdfs:Class' : 'oink'
+      }
+    },
+    methods: {
+      blurSlug () {
+        if (this.get('subslug')) {
+          goto('/' + this.get('suggestions')[0])
+        }
+      },
+      home (evt) {
+        if (evt) {
+          evt.preventDefault()
+        }
+        this.updateSamples()
+        goto('/')
+      },
+      selectQuery () {
+        this.refs.query.select()
+      },
+      submit (evt) {
+        evt.preventDefault()
+        const firstSuggestion = this.get('suggestions')[0]
+        console.log(firstSuggestion)
+        if (firstSuggestion) {
+          goto('/' + firstSuggestion)
+        }
+      },
+      updateSamples () {
+        console.log('updateSamples')
+        this.set({
+          samples: _sample(ids, 20)
+        })
+      }
+    },
+    preload({ params, query }) {
+      if (query.cloak) {
+        return {
+          cloak: true,
+          slug: '',
+          data: null
+        }
+      }
+
+      const slug = (params.slug || query.q || '').replace(/[^a-zA-Z0-9]/, '')
+      const data = lookup[slug]
+
+      return {
+        cloak: false,
+        slug,
+        data
+      }
+    },
+    oncreate () {
+      const cloaked = this.get('cloak')
+      if (cloaked) {
+        const slug = window.location.pathname.replace(/[^a-zA-Z0-9]/, '')
+        console.log('Cloaked =>',  JSON.stringify({slug}))
+        this.set({
+          cloak: false,
+          slug,
+          data: lookup[slug]
+        })
+      }
+      this.updateSamples()
+
+      this.observe('slug', slug => {
+        console.log('slug change')
+        slug = slug.replace(/[^a-zA-Z]/, '')
+        const data = lookup[slug]
+        if (data) {
+          return this.set({ data })
+        }
+        this.updateSamples()
+
+        const suggestions = this.get('suggestions')
+
+        const match = suggestions.length === 1 && lookup[suggestions[0]]
+
+        this.set({ data: match })
+      }, { init: false })
+    }
+  }
+
+  function upperClass (id) {
+    const subcls = lookup[id]
+    if (!subcls || !subcls.s || !subcls.s.length) {
+      return [[id]]
+    }
+    return [].concat.apply([], subcls.s.map(upper => upperClass(upper.id).map(u => u.concat(id))))
+  }
+
+  function _sample (arr, count) {
+    const len = arr.length
+    if (count) {
+      return new Array(count).fill(0).map(() => _sample(arr))
+    } else {
+      return arr[Math.floor(Math.random() * len)]
+    }
+  }
+</script>
+
+<style>
+  h2 {
+    margin: 0 0 0.5em 0;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .facet {
+    margin: 2em 0 3em;
+  }
+  .info {
+    font-size: 21px;
+  }
+
+
+  .facet a {
+    text-decoration: none;
+    border-bottom: 1px solid #ccc;
+  }
+  .facet a:hover {
+    background: #b00;
+    color: #fff;
+    border-radius: 3px;
+    border-color: transparent;
+  }
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  .links {
+    border-color: #ccc;
+    border-collapse: collapse;
+    width: calc(100% + 2rem);
+    font-size: inherit;
+    vertical-align: top;
+    margin: 0em -1rem;
+    box-sizing: border-box;
+  }
+  .links th,
+  .links td {
+    padding: 0;
+    border: 0;
+    padding: 5px 10px 5px 6px;
+  }
+  /*.links th:first-child,
+  .links td:first-child {
+    border-left: 1px solid #ccc;
+  }
+  .links th:last-child,
+  .links td:last-child {
+    border-right: 1px solid #ccc;
+  }*/
+  .links.links {
+    margin-bottom: 1em;
+  }
+  .links th {
+    text-align: left;
+    font-weight: 600;
+  }
+  .links a {
+    display: inline-block;
+    text-decoration: none;
+    padding: 0 .2em;
+    margin: 4px 0;
+    line-height: 1.2em;
+  }
+  .links th a:first-child,
+  .links td a:first-child {
+    margin-left: -.2em
+  }
+  .links a:hover {
+    margin:  0;
+    padding: 4px .2em;
+    background: #b00;
+    color: #fff;
+  }
+
+  @media (max-width: 767px) {
+    .links {
+
+    }
+    .links thead {
+      display: none;
+    }
+    .links {
+      display: block;
+    }
+    .links tbody {
+      display: block;
+    }
+    .links tr {
+      display: block;
+      margin-top: .7rem;
+      padding: 0 1rem;
+    }
+    .links .id {
+      padding: 0;
+      margin: 0;
+      border: 0;
+      display: inline-block;
+    }
+    .links .has {
+      padding: 0;
+      margin: 0;
+      border: 0;
+      display: inline;
+      font-size: 13px;
+      display: none;
+    }
+    .links .has::before {
+      content: '(is property of';
+      margin: 0 5px;
+      color: #999;
+    }
+    .links .has::after {
+      content: ')';
+      margin: 0 5px;
+      color: #999;
+    }
+    .links .has .newline {
+      display: inline;
+      margin: 0 0;
+    }
+    .links .has .newline+.newline::before {
+      content: '&';
+      color: #ccc;
+      margin-right: 5px;
+    }
+    .links .has+.id {
+      padding-left: 0;
+    }
+    .links .expected {
+      padding: 0;
+      margin: 0;
+      border: 0;
+      display: inline;
+    }
+    .links .expected::before {
+      content: 'expects';
+      margin-right: 5px;
+      color: #999;
+    }
+    .links .expected .newline {
+      display: inline;
+    }
+    .links .expected .newline::after {
+      content: 'or';
+      margin-right: 5px;
+      color: #999;
+    }
+    .links .expected .newline:last-child::after {
+      content: '';
+      display: none;
+    }
+    .links .comment {
+      display: block;
+      border: 0;
+      /*border-bottom: 1px solid #ccc;*/
+      padding: 0 0 .7rem;
+      font-size: 12px;
+      color: #444;
+    }
+  }
+  @media (min-width: 768px) and (max-width: 1000px) {
+    .links th:first-child,
+    .links td:first-child {
+      padding-left: 1rem;
+    }
+  }
+  @media (min-width: 768px) {
+    .links tr {
+      vertical-align: top;
+    }
+    .links thead th {
+      vertical-align: bottom;
+      opacity: .4;
+    }
+    .links tbody th,
+    .links tbody td {
+      border-top: 1px solid #eee;
+    }
+    .links tr:last-child > th,
+    .links tr:last-child > td {
+      border-bottom: 1px solid #eee;
+    }
+  }
+  @media (min-width: 1001px) {
+    .links {
+      width: 100%;
+      margin: 1em 0;
+    }
+    .links th:first-child,
+    .links td:first-child {
+      padding-left: 0;
+    }
+    .links th:last-child,
+    .links td:last-child {
+      padding-right: 0;
+    }
+  }
+
+
+  .tree {
+    margin: 1em 0;
+  }
+  .branch {
+    margin-left: -2px;
+  }
+  .branch-cls {
+    margin: 0 2px;
+    margin-right: 5px;
+    padding: 0;
+    text-decoration: none;
+    border-bottom: 1px solid #ccc;
+  }
+  .body .branch-cls {
+    border: none;
+    text-decoration: underline;
+  }
+  .branch-cls:hover {
+    margin: 0;
+    margin-right: 3px;
+    padding: 1px 2px;
+      background: #b00;
+      color: #fff;
+    border-radius: 3px;
+      border-color: transparent;
+  }
+
+  .container {
+    margin: 0 auto;
+    padding: 1rem;
+    max-width: 1000px;
+  }
+
+  .strike {
+    opacity: .2;
+  }
+  .strike .id a {
+    text-decoration: line-through!important;
+  }
+
+  h2.muted {
+    opacity: .3;
+  }
+  .muted a {
+    opacity: .6;
+    background: none;
+  }
+  .muted a:hover {
+    opacity: 1;
+    background: #999;
+  }
+  .text-muted {
+    color: #999;
+  }
+  .type {
+    margin-left: 0.2em;
+    border-radius: 4px;
+    padding: .15em .4em;
+    background-color: white;
+    color: #900;
+    font-size: 0.75em;
+    opacity: .7;
+    user-select: none;
+  }
+
+  .longurl {
+    display: block;
+    font-size: 12px;
+    opacity: .7;
+  }
+  @media (max-width: 1000px) {
+    .type {
+      float: right;
+    }
+  }
+  @media (min-width: 1001px) {
+    .long {
+      position: absolute;
+      right: 1rem;
+      bottom: 1rem;
+      margin: 0;
+      text-align: right;
+    }
+  }
+  .select-all {
+    user-select: all;
+  }
+  .header {
+    margin: -1rem -1rem 0;
+    padding: .5rem 1rem .5rem;
+  /*  background: #900;
+    color: white;*/
+  }
+  .body {
+    position: relative;
+    margin: 0 -1rem;
+    padding: 1px 1rem 1px;
+    background: #900;
+    color: white;
+  }
+  .body--muted {
+    background: #eee;
+    color: black;
+  }
+  .body--muted .type {
+    background: black;
+    color: white;
+  }
+  .body-comment {
+    font-size: 18px;
+    font-weight: 300;
+  }
+  @media (min-width: 768px) {
+    .body {
+      margin: 0;
+      border-radius: .5em;
+    }
+    .body--muted {
+      border-bottom-right-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    .body-comment {
+      font-size: 21px;
+      font-weight: 300;
+    }
+  }
+
+  .notices {
+    margin: 0 -1rem 1rem;
+  }
+
+  .notice {
+    background: #090;
+    color: white;
+    padding: 1rem;
+  }
+  .notice h2 {
+    font-weight: 300;
+    margin: 0;
+    padding: 0;
+  }
+  .notice h2::before {
+    content: '→ ';
+    margin-right: .3em;
+  }
+
+  .notice a {
+    font-weight: 600;
+    background: #090;
+    color: white;
+  }
+  @media (min-width: 768px) {
+    .notices {
+      margin: 0 0 1rem;
+    }
+    .notice:last-child {
+      border-bottom-left-radius: .5em;
+      border-bottom-right-radius: .5em;
+    }
+  }
+
+  .input-h1 {
+    display: block;
+    position: relative;
+    font-weight: 500;
+  }
+  .input-prepend {
+    opacity: .5;
+  }
+  a.input-prepend {
+    text-decoration: none;
+  }
+  a.input-prepend:hover {
+    text-decoration: underline;
+  }
+  .input-append {
+    position: absolute;
+    right: .5em;
+    top: 0;
+  }
+  .input-field {
+    font: inherit;
+    border: 0;
+    padding-left: 3px;
+    width: calc(100% - 7em);
+    background: none;
+    outline: none;
+    color: inherit;
+  }
+  .input-field:placeholder {
+    color: inherit;
+  }
+  .input-ghost {
+    position: absolute;
+    z-index: -1;
+    top: 1px;
+    left: 0px;
+    opacity: .2;
+  }
+
+  @media (max-width: 400px) {
+    .font-scale-h1 {
+      font-size: 1.2em;
+    }
+  }
+  @media (min-width: 401px) {
+    .font-scale-h1 {
+      font-size: 1.5em;
+    }
+  }
+  @media (min-width: 768px) {
+    .font-scale-h1 {
+      font-size: 2em;
+    }
+  }
+
+
+  .suggestions {
+    display: inline-block;
+    font-size: 1.3rem;
+    padding-left: 3px;
+  }
+  .suggestions a {
+    text-decoration: none;
+    outline: none;
+  }
+  .suggestions a:focus,
+  .suggestions a:hover {
+    text-decoration: underline;
+  }
+</style>
