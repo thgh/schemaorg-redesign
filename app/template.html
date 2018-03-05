@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width'>
+  <meta name='theme-color' content='#990000'>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      line-height: 1.5;
+      font-family: -apple-system, Roboto, BlinkMacSystemFont, Segoe UI, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+    }
+    #sapper {
+      min-height: calc(100vh - 10em);
+    }
+    a {
+      color: inherit;
+    }
+    pre {
+      white-space: pre-wrap;
+    }
+    code {
+      margin: 0 2px;
+      padding: 2px 4px;
+      background: #666;
+      color: white;
+      border-radius: 2px;
+    }
+    .comment p:first-child {
+      margin-top: 0;
+    }
+    .comment p:last-child {
+      margin-bottom: 0;
+    }
+    .longurl-placeholder{
+      display: none;
+    }
+    @media (min-width: 1001px) {
+      .longurl-placeholder {
+        display: inline-block;
+        font-size: 12px;
+        height: 1px;
+        visibility: hidden;
+      }
+    }
+    footer {
+      margin: 5em auto 5em;
+      width: 90%;
+      text-align: center;
+    }
+  </style>
+  <link rel='manifest' href='/manifest.json'>
+  <link rel='icon' type="image/x-icon" href='/favicon.ico'>
+
+  %sapper.styles%
+
+  %sapper.head%
+</head>
+<body>
+  <div id='sapper'>%sapper.html%</div>
+
+  %sapper.scripts%
+
+  <footer>
+    <p>
+      <a href="https://schemaorg-redesign.now.sh/">schemaorg-redesign.now.sh</a> is a responsive redesign &amp; offline-first PWA of <a href="https://schema.org">schema.org</a>
+    </p>
+    <p>
+      Created by <a href="https://github.com/thgh">thgh</a> with <a href="https://sapper.svelte.technology">Sapper</a>/<a href="https://svelte.technology">Svelte</a>.
+      <br>
+      <a href="https://github.com/thgh/schemaorg-redesign">Source on GitHub</a>
+    </p>
+    <p>
+      Data is based on <a href="https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.3/schema.jsonld" target="_blank" download>releases/3.3/schema.jsonld</a>
+      <br>
+      <a href="https://github.com/schemaorg/schemaorg">schemaorg/schemaorg</a> is licensed under the <a href="https://github.com/schemaorg/schemaorg/blob/master/LICENSE">Apache License 2.0</a>
+    </p>
+    <noscript>
+      <p>
+        Don't worry, everything works even with javascript disabled!
+      </p>
+    </noscript>
+  </footer>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      setTimeout(function () {
+        navigator.serviceWorker.register('/service-worker.js');
+      }, 1000)
+    }
+  </script>
+</body>
+</html>

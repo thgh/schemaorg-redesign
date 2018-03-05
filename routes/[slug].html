@@ -1,19 +1,20 @@
 <:Head>
   <title>{{ [data && data.id, 'schema.org redesign'].filter(Boolean).join(' | ') }}</title>
+  <meta name="description" content="{{ data && data.c || 'Responsive redesign & offline-first PWA of schema.org' }}">
 </:Head>
 
 {{#if !cloak}}
 <div class="container">
   <form class="header" method="GET" action="/" on:submit="submit(event)">
     <label class="input-h1 font-scale-h1">
-      <a class="input-prepend" href="/" on:click="home(event)">schema:</a><input class="input-field" type="text" bind:value="slug" on:blur="blurSlug()" value="{{slug}}" name="q" ref:query tabindex="0">
+      <a class="input-prepend" href="/" on:click="home(event)">schema:</a><input class="input-field" type="text" bind:value="slug" on:blur="blurSlug()" name="q" ref:query tabindex="0">
       <span class="input-append" on:click="selectQuery()">🔍</span>
       {{#if subslug}}
         <span class="input-ghost">schema:<span style="margin-right: 3px;"></span>{{ subslug }}</span>
       {{/if}}
     </label>
     {{#if !data && suggestions[0]}}
-      <input type="hidden" value="{{ suggestions[0].id }}" name="q">
+      <input type="hidden" value="{{ suggestions[0] }}" name="q">
     {{/if}}
   </form>
 
@@ -252,7 +253,7 @@
         return starts.concat(includes)
       },
       tree (data) {
-        return upperClass(data.id)
+        return data ? upperClass(data.id) : []
       },
       showTree (tree) {
         return tree.length && tree[0].length > 1
@@ -288,7 +289,7 @@
       updateSamples () {
         console.log('updateSamples')
         this.set({
-          samples: _sample(ids, 20)
+          samples: _sample(ids, 10).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
         })
       }
     },
@@ -302,12 +303,10 @@
       }
 
       const slug = (params.slug || query.q || '').replace(/[^a-zA-Z0-9]/, '')
-      const data = lookup[slug]
-
       return {
         cloak: false,
         slug,
-        data
+        data: lookup[slug]
       }
     },
     oncreate () {
@@ -565,7 +564,8 @@
     margin: 1em 0;
   }
   .branch {
-    margin-left: -2px;
+    margin: .5em 0 .5em -2px;
+    line-height: 1.2em;
   }
   .branch-cls {
     margin: 0 2px;

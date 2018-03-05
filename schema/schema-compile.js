@@ -1,24 +1,42 @@
 const fs = require('fs')
 
-const data = read('schema-3.3.jsonld')
+if (exists('schema-lookup.json')) {
+  console.log('schema-lookup.json already exists')
+} else if (exists('schema-3.3.jsonld')) {
+  compile(read('schema-3.3.jsonld'))
+} else {
+  console.log('Downloading schema-3.3.jsonld')
+  require('node-fetch')('https://raw.githubusercontent.com/schemaorg/schemaorg/master/data/releases/3.3/schema.jsonld')
+    .then(res => res.json())
+    .then(compile)
+}
 
-const lookup = {}
-
-data['@graph'].sort((a, b) => a['@id'].localeCompare(b['@id']))
-
-data['@graph'].forEach(item => {
-  if (!item['@id'].startsWith('http://schema.org/')) {
-    return // console.log(item['@id'])
+function compile (data, haveIt) {
+  if (!process.env.NOW && !haveIt) {
+    write('schema-3.3.jsonld', data)
   }
-  lookup[item['@id'].slice(18)] = {
-    d: fromIdCollection(item['http://schema.org/domainIncludes']),
-    r: fromIdCollection(item['http://schema.org/rangeIncludes']),
-    e: fromIdCollection(item['http://schema.org/supersededBy']),
-    s: fromIdCollection(item['rdfs:subClassOf']),
-    c: relativeLinks(item['rdfs:comment']),
-    l: item['rdfs:label'] === item['@id'] ? item['rdfs:label'] : undefined
-  }
-})
+
+  const lookup = {}
+
+  data['@graph'].sort((a, b) => a['@id'].localeCompare(b['@id']))
+
+  data['@graph'].forEach(item => {
+    if (!item['@id'].startsWith('http://schema.org/')) {
+      return // console.log(item['@id'])
+    }
+    lookup[item['@id'].slice(18)] = {
+      d: fromIdCollection(item['http://schema.org/domainIncludes']),
+      r: fromIdCollection(item['http://schema.org/rangeIncludes']),
+      e: fromIdCollection(item['http://schema.org/supersededBy']),
+      s: fromIdCollection(item['rdfs:subClassOf']),
+      c: relativeLinks(item['rdfs:comment']),
+      l: item['rdfs:label'] === item['@id'] ? item['rdfs:label'] : undefined
+    }
+  })
+
+  write('schema-lookup.json', lookup)
+}
+
 
 function fromType (t) {
   return t === 'rdf:Property' ? 1 : t === 'rdf:Class' ? 2 : t
@@ -44,7 +62,9 @@ function relativeLinks (str) {
     .replace(/ class="localLink"/g, '')
 }
 
-write('schema-lookup.json', lookup)
+function exists (path) {
+  return fs.existsSync(__dirname + '/' + path)
+}
 
 function read (path) {
   try {

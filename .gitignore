@@ -1,6 +1,13 @@
 .DS_Store
 node_modules
 .sapper
-templates/.*
 schema/schema-3.3.jsonld
 schema/schema-lookup.json
+yarn-error.log
+app/manifest
+dist
+build
+export
+yarn.lock
+cypress/screenshots
+templates/.*
