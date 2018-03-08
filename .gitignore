@@ -1,8 +1,6 @@
 .DS_Store
 node_modules
 .sapper
-schema/schema-3.3.jsonld
-schema/schema-lookup.json
 yarn-error.log
 app/manifest
 dist
